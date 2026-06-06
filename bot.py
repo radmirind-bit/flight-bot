@@ -14,9 +14,9 @@ TRAVELPAYOUTS_TOKEN = os.getenv("TRAVELPAYOUTS_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 ROUTES = [
-    {"from": "KZN", "to": "SHA", "name": "Казань → Шанхай", "threshold": 35000},
-    {"from": "KZN", "to": "HKT", "name": "Казань → Пхукет", "threshold": 35000},
-    {"from": "KZN", "to": "AYT", "name": "Казань → Анталия", "threshold": 12000},
+    {"from": "KZN", "to": "SHA", "name": "Казань → Шанхай", "threshold": 20000},
+    {"from": "KZN", "to": "HKT", "name": "Казань → Пхукет", "threshold": 20000},
+    {"from": "KZN", "to": "AYT", "name": "Казань → Анталия", "threshold": 9000},
 ]
 
 MONTHS = [
