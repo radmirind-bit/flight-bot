@@ -14,8 +14,8 @@ TRAVELPAYOUTS_TOKEN = os.getenv("TRAVELPAYOUTS_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 ROUTES = [
-    {"from": "KZN", "to": "SHA", "name": "Казань → Шанхай", "threshold": 80000},
-    {"from": "KZN", "to": "HKT", "name": "Казань → Пхукет", "threshold": 20000},
+    {"from": "KZN", "to": "SHA", "name": "Казань → Шанхай", "threshold": 25000},
+    {"from": "KZN", "to": "HKT", "name": "Казань → Пхукет", "threshold": 25000},
     {"from": "KZN", "to": "AYT", "name": "Казань → Анталия", "threshold": 9000},
 ]
 
@@ -68,8 +68,8 @@ async def cmd_start(message: Message):
     await message.answer(
         "✈️ <b>Трекер запущен!</b>\n\n"
         "Отслеживаю:\n"
-        "• Казань → Шанхай (порог 80 000 ₽)\n"
-        "• Казань → Пхукет (порог 20 000 ₽)\n"
+        "• Казань → Шанхай (порог 25 000 ₽)\n"
+        "• Казань → Пхукет (порог 25 000 ₽)\n"
         "• Казань → Анталия (порог 9 000 ₽)\n\n"
         "Проверка каждые 3 часов.",
         parse_mode="HTML"
