@@ -94,4 +94,4 @@ async def cmd_start(message: Message):
 
 @dp.message(Command("check"))
 async def cmd_check(message: Message):
-    await message.answer("🔍 Проверяю цены по
+    await message.answer("🔍 Проверяю цены  по всем месяцам...")
