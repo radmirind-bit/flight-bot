@@ -16,7 +16,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 ROUTES = [
     {"from": "KZN", "to": "SHA", "name": "Казань → Шанхай", "threshold": 25000},
     {"from": "KZN", "to": "HKT", "name": "Казань → Пхукет", "threshold": 25000},
-    {"from": "KZN", "to": "AYT", "name": "Казань → Анталия", "threshold": 25000},
+    {"from": "KZN", "to": "AYT", "name": "Казань → Анталия", "threshold": 18000},
 ]
 
 MONTHS = ["2026-07", "2026-08", "2026-09", "2026-10", "2026-11"]
@@ -26,39 +26,50 @@ MONTH_NAMES = {
 }
 
 async def check_prices(bot: Bot):
+    found_any = False
     async with aiohttp.ClientSession() as session:
         for route in ROUTES:
             for month in MONTHS:
-                url = "https://api.travelpayouts.com/v1/prices/cheap"
+                url = "https://api.travelpayouts.com/v2/prices/latest"
                 params = {
                     "origin": route["from"],
                     "destination": route["to"],
-                    "depart_date": month,
                     "currency": "rub",
                     "token": TRAVELPAYOUTS_TOKEN,
+                    "limit": 30,
+                    "sorting": "price",
+                    "period_type": "month",
+                    "one_way": "true",
+                    "beginning_of_period": month + "-01",
                 }
                 try:
                     async with session.get(url, params=params) as resp:
                         data = await resp.json()
                         if data.get("success") and data.get("data"):
-                            dest = route["to"]
-                            flights = data["data"].get(dest, {})
+                            flights = [
+                                f for f in data["data"]
+                                if f.get("depart_date", "").startswith(month)
+                                and f.get("actual", False)
+                            ]
                             if flights:
-                                flight = min(flights.values(), key=lambda x: x["price"])
-                                min_price = flight["price"]
-                                dep = flight["departure_at"][:10]
-                                logger.info(f"{route['name']} {MONTH_NAMES[month]}: {min_price} ₽")
-                                if min_price <= route["threshold"]:
+                                best = min(flights, key=lambda x: x["value"])
+                                price = best["value"]
+                                dep = best["depart_date"]
+                                gate = best.get("gate", "")
+                                logger.info(f"{route['name']} {MONTH_NAMES[month]}: {price} ₽ ({gate})")
+                                if price <= route["threshold"]:
+                                    found_any = True
                                     msg = (
                                         f"✈️ <b>{route['name']}</b>\n"
                                         f"📅 {MONTH_NAMES[month]} · вылет {dep}\n"
-                                        f"💰 <b>{min_price:,} ₽</b> (порог: {route['threshold']:,} ₽)\n"
-                                        f"🔗 aviasales.ru"
+                                        f"💰 <b>{price:,} ₽</b> (порог: {route['threshold']:,} ₽)\n"
+                                        f"🏪 Через: {gate}"
                                     )
                                     await bot.send_message(CHAT_ID, msg, parse_mode="HTML")
                 except Exception as e:
                     logger.error(f"Ошибка {route['name']} {month}: {e}")
                 await asyncio.sleep(1)
+    return found_any
 
 async def price_checker_loop(bot: Bot):
     while True:
@@ -75,7 +86,7 @@ async def cmd_start(message: Message):
         "Отслеживаю июль–ноябрь 2026:\n"
         "• Казань → Шанхай (порог 25 000 ₽)\n"
         "• Казань → Пхукет (порог 25 000 ₽)\n"
-        "• Казань → Анталия (порог 25 000 ₽)\n\n"
+        "• Казань → Анталия (порог 18 000 ₽)\n\n"
         "Проверка каждые 6 часов.\n"
         "/check — проверить сейчас",
         parse_mode="HTML"
@@ -83,13 +94,4 @@ async def cmd_start(message: Message):
 
 @dp.message(Command("check"))
 async def cmd_check(message: Message):
-    await message.answer("🔍 Проверяю цены по всем месяцам...")
-    await check_prices(bot)
-    await message.answer("✅ Готово!")
-
-async def main():
-    asyncio.create_task(price_checker_loop(bot))
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    await message.answer("🔍 Проверяю цены по
