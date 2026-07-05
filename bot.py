@@ -14,9 +14,9 @@ TRAVELPAYOUTS_TOKEN = os.getenv("TRAVELPAYOUTS_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 ROUTES = [
-    {"from": "KZN", "to": "SHA", "name": "Казань → Шанхай", "threshold": 25000},
-    {"from": "KZN", "to": "HKT", "name": "Казань → Пхукет", "threshold": 25000},
-    {"from": "KZN", "to": "AYT", "name": "Казань → Анталия", "threshold": 18000},
+    {"from": "KZN", "to": "SHA", "name": "Казань - Шанхай", "threshold": 25000},
+    {"from": "KZN", "to": "HKT", "name": "Казань - Пхукет", "threshold": 25000},
+    {"from": "KZN", "to": "AYT", "name": "Казань - Анталия", "threshold": 18000},
 ]
 
 MONTHS = ["2026-07", "2026-08", "2026-09", "2026-10", "2026-11"]
@@ -56,18 +56,18 @@ async def check_prices(bot: Bot):
                                 price = best["value"]
                                 dep = best["depart_date"]
                                 gate = best.get("gate", "")
-                                logger.info(f"{route['name']} {MONTH_NAMES[month]}: {price} ₽ ({gate})")
+                                logger.info(route["name"] + " " + MONTH_NAMES[month] + ": " + str(price) + " руб (" + gate + ")")
                                 if price <= route["threshold"]:
                                     found_any = True
                                     msg = (
-                                        f"✈️ <b>{route['name']}</b>\n"
-                                        f"📅 {MONTH_NAMES[month]} · вылет {dep}\n"
-                                        f"💰 <b>{price:,} ₽</b> (порог: {route['threshold']:,} ₽)\n"
-                                        f"🏪 Через: {gate}"
+                                        route["name"] + "\n"
+                                        + MONTH_NAMES[month] + " - вылет " + dep + "\n"
+                                        + str(price) + " руб (порог: " + str(route["threshold"]) + " руб)\n"
+                                        + "Через: " + gate
                                     )
-                                    await bot.send_message(CHAT_ID, msg, parse_mode="HTML")
+                                    await bot.send_message(CHAT_ID, msg)
                 except Exception as e:
-                    logger.error(f"Ошибка {route['name']} {month}: {e}")
+                    logger.error("Ошибка " + route["name"] + " " + month + ": " + str(e))
                 await asyncio.sleep(1)
     return found_any
 
@@ -82,16 +82,27 @@ dp = Dispatcher()
 @dp.message(Command("start"))
 async def cmd_start(message: Message):
     await message.answer(
-        "✈️ <b>Трекер запущен!</b>\n\n"
-        "Отслеживаю июль–ноябрь 2026:\n"
-        "• Казань → Шанхай (порог 25 000 ₽)\n"
-        "• Казань → Пхукет (порог 25 000 ₽)\n"
-        "• Казань → Анталия (порог 18 000 ₽)\n\n"
+        "Трекер запущен!\n\n"
+        "Отслеживаю июль-ноябрь 2026:\n"
+        "Казань - Шанхай (порог 25000 руб)\n"
+        "Казань - Пхукет (порог 25000 руб)\n"
+        "Казань - Анталия (порог 18000 руб)\n\n"
         "Проверка каждые 6 часов.\n"
-        "/check — проверить сейчас",
-        parse_mode="HTML"
+        "/check - проверить сейчас"
     )
 
 @dp.message(Command("check"))
 async def cmd_check(message: Message):
-    await message.answer("🔍 Проверяю цены  по всем месяцам...")
+    await message.answer("Проверяю цены...")
+    found = await check_prices(bot)
+    if not found:
+        await message.answer("Готово. Цен ниже порога не найдено.")
+    else:
+        await message.answer("Готово! Уведомления отправлены.")
+
+async def main():
+    asyncio.create_task(price_checker_loop(bot))
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
