@@ -14,9 +14,9 @@ TRAVELPAYOUTS_TOKEN = os.getenv("TRAVELPAYOUTS_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 ROUTES = [
-    {"from": "KZN", "to": "SHA", "name": "Казань - Шанхай", "threshold": 23000},
+    {"from": "KZN", "to": "SHA", "name": "Казань - Шанхай", "threshold": 25000},
     {"from": "KZN", "to": "HKT", "name": "Казань - Пхукет", "threshold": 25000},
-    {"from": "KZN", "to": "AYT", "name": "Казань - Анталия", "threshold": 10000},
+    {"from": "KZN", "to": "AYT", "name": "Казань - Анталия", "threshold": 18000},
 ]
 
 MONTHS = ["2026-07", "2026-08", "2026-09", "2026-10", "2026-11"]
@@ -24,6 +24,10 @@ MONTH_NAMES = {
     "2026-07": "Июль", "2026-08": "Август", "2026-09": "Сентябрь",
     "2026-10": "Октябрь", "2026-11": "Ноябрь"
 }
+
+def aviasales_link(fly_from, fly_to, date):
+    d = date.replace("-", "")[:6]
+    return "https://www.aviasales.ru/search/" + fly_from + d + fly_to + "1"
 
 async def check_prices(bot: Bot):
     found_any = False
@@ -56,14 +60,16 @@ async def check_prices(bot: Bot):
                                 price = best["value"]
                                 dep = best["depart_date"]
                                 gate = best.get("gate", "")
-                                logger.info(route["name"] + " " + MONTH_NAMES[month] + ": " + str(price) + " руб (" + gate + ")")
+                                logger.info(route["name"] + " " + MONTH_NAMES[month] + ": " + str(price) + " руб")
                                 if price <= route["threshold"]:
                                     found_any = True
+                                    link = aviasales_link(route["from"], route["to"], dep)
                                     msg = (
                                         route["name"] + "\n"
                                         + MONTH_NAMES[month] + " - вылет " + dep + "\n"
                                         + str(price) + " руб (порог: " + str(route["threshold"]) + " руб)\n"
-                                        + "Через: " + gate
+                                        + "Источник: " + gate + "\n"
+                                        + "Проверить на Авиасейлс: " + link
                                     )
                                     await bot.send_message(CHAT_ID, msg)
                 except Exception as e:
@@ -84,9 +90,9 @@ async def cmd_start(message: Message):
     await message.answer(
         "Трекер запущен!\n\n"
         "Отслеживаю июль-ноябрь 2026:\n"
-        "Казань - Шанхай (порог 23000 руб)\n"
+        "Казань - Шанхай (порог 25000 руб)\n"
         "Казань - Пхукет (порог 25000 руб)\n"
-        "Казань - Анталия (порог 10000 руб)\n\n"
+        "Казань - Анталия (порог 18000 руб)\n\n"
         "Проверка каждые 6 часов.\n"
         "/check - проверить сейчас"
     )
