@@ -14,7 +14,7 @@ TRAVELPAYOUTS_TOKEN = os.getenv("TRAVELPAYOUTS_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 ROUTES = [
-    {"from": "KZN", "to": "SHA", "name": "Казань - Шанхай", "threshold": 23000},
+    {"from": "KZN", "to": "SHA", "name": "Казань - Шанхай", "threshold": 22000},
     {"from": "KZN", "to": "HKT", "name": "Казань - Пхукет", "threshold": 23000},
     {"from": "KZN", "to": "AYT", "name": "Казань - Анталия", "threshold": 10000},
 ]
@@ -90,7 +90,7 @@ async def cmd_start(message: Message):
     await message.answer(
         "Трекер запущен!\n\n"
         "Отслеживаю июль-ноябрь 2026:\n"
-        "Казань - Шанхай (порог 23000 руб)\n"
+        "Казань - Шанхай (порог 22000 руб)\n"
         "Казань - Пхукет (порог 23000 руб)\n"
         "Казань - Анталия (порог 10000 руб)\n\n"
         "Проверка каждые 6 часов.\n"
